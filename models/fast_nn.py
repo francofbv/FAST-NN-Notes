@@ -48,10 +48,12 @@ class FactorAugmentedSparseThroughputNN(nn.Module):
 		'''
 		super(FactorAugmentedSparseThroughputNN, self).__init__()
 
-		self.diversified_projection = nn.Linear(p, r_bar, bias=False)
-		dp_matrix_tensor = torch.tensor(np.transpose(dp_mat), dtype=torch.float32)
-		self.diversified_projection.weight = nn.Parameter(dp_matrix_tensor, requires_grad=False)
+		# diversified projection matrix
+		self.diversified_projection = nn.Linear(p, r_bar, bias=False) # initialize a linear projection
+		dp_matrix_tensor = torch.tensor(np.transpose(dp_mat), dtype=torch.float32) # converts pretrained dp_mat to a pytorch tensor
+		self.diversified_projection.weight = nn.Parameter(dp_matrix_tensor, requires_grad=False) # assigns the pretrained dp_mat to the linear layer
 
+		# reconstruction (r_bar => p)
 		if rs_mat is not None:
 			self.reconstruct = nn.Linear(r_bar, p, bias=False)
 			rs_matrix_tensor = torch.tensor(np.transpose(rs_mat), dtype=torch.float32)
@@ -61,7 +63,9 @@ class FactorAugmentedSparseThroughputNN(nn.Module):
 
 		if sparsity is None:
 			sparsity = width
-		self.variable_selection = nn.Linear(p, sparsity, bias=False)
+
+		# variable selection
+		self.variable_selection = nn.Linear(p, sparsity, bias=False) # initialize a linear projection
 
 		relu_nn = [('linear1', nn.Linear(r_bar + sparsity, width)), ('relu1', nn.ReLU())]
 		for i in range(depth - 1):

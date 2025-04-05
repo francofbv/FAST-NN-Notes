@@ -13,14 +13,14 @@ from utils import *
 
 def calculate_predefined_matrix(unlabelled_x, r_bar):
 	p = np.shape(unlabelled_x)[1]
-	cov_mat = np.matmul(np.transpose(unlabelled_x), unlabelled_x)
-	eigen_values, eigen_vectors = largest_eigsh(cov_mat, r_bar, which='LM')
-	dp_matrix = eigen_vectors / np.sqrt(p)
-	estimate_f = np.matmul(unlabelled_x, dp_matrix)
-	cov_f_mat = np.matmul(np.transpose(estimate_f), estimate_f)
-	cov_fx_mat = np.matmul(np.transpose(estimate_f), unlabelled_x)
-	rs_matrix = np.matmul(np.linalg.pinv(cov_f_mat), cov_fx_mat)
-	return dp_matrix, rs_matrix
+	cov_mat = np.matmul(np.transpose(unlabelled_x), unlabelled_x) # compute covariance matrix of covariate
+	eigen_values, eigen_vectors = largest_eigsh(cov_mat, r_bar, which='LM') # get top r_bar eigenvectors
+	dp_matrix = eigen_vectors / np.sqrt(p) # normalize eigenvectors
+	estimate_f = np.matmul(unlabelled_x, dp_matrix) # covariates @ dp_matrix = p^{-1}W^Tx (equation 3.1)
+	cov_f_mat = np.matmul(np.transpose(estimate_f), estimate_f) # compute covariance matrix of estimated factors (f^T @ f)
+	cov_fx_mat = np.matmul(np.transpose(estimate_f), unlabelled_x) # compute cross-covariacne matrix between estimated covariate and original covariate (f^T @ x). capture how each factor relates to the original feature
+	rs_matrix = np.matmul(np.linalg.pinv(cov_f_mat), cov_fx_mat) # creates reconstruction matrix by multiplying pseudo-inverse of cross-covariane matrix. Gives us the mapping from the factor space back to the original feature space, effectively reconstructing the factor-related component of the data
+	return dp_matrix, rs_matrix # diversified projection matrix, reconstruction matrix
 
 
 def train_loop(data_loader, model, loss_fn, optimizer, reg_lambda, reg_tau):
